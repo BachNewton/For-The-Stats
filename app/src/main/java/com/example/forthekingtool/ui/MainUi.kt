@@ -4,15 +4,12 @@ import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.MaterialTheme
+import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import com.example.forthekingtool.R
-import androidx.compose.material.Text
-import androidx.compose.material.TextField
-import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,7 +27,7 @@ import com.example.forthekingtool.ui.theme.ForTheKingToolTheme
 @Composable
 fun MainUi() {
     Box {
-        TopAppBar(title = {Text("For The Stats!")})
+        TopAppBar(title = { Text("For The Stats!") })
 
         Column(
             Modifier.fillMaxSize(),
@@ -38,13 +35,17 @@ fun MainUi() {
             verticalArrangement = Arrangement.Center
         ) {
             val rolls = remember { mutableStateOf(3) }
+            val focus = remember { mutableStateOf(0) }
             val rollChanceString = remember { mutableStateOf("75") }
             val damageString = remember { mutableStateOf("10") }
 
             val damage = if (damageString.value.isEmpty()) 0 else damageString.value.toInt()
-            val rollChance = if (rollChanceString.value.isEmpty()) 0.0 else rollChanceString.value.toDouble() / 100
-            val exactChances = BinomialDistributionCalculator.calculateExactChances(rollChance, rolls.value)
-            val atLeastChances = BinomialDistributionCalculator.calculateAtLeastChances(exactChances)
+            val rollChance =
+                if (rollChanceString.value.isEmpty()) 0.0 else rollChanceString.value.toDouble() / 100
+            val exactChances =
+                BinomialDistributionCalculator.calculateExactChances(rollChance, rolls.value)
+            val atLeastChances =
+                BinomialDistributionCalculator.calculateAtLeastChances(exactChances)
 
             InputRow {
                 DamageInput(damageString)
@@ -59,11 +60,32 @@ fun MainUi() {
             }
 
             RollIconsRow {
-                RollIcons(rolls)
+                RollIcons(rolls, focus.value)
+            }
+
+            FocusRow {
+                FocusButton("-") {
+                    // Reduce focus
+                }
+                Text("Focus", modifier = Modifier.padding(horizontal = 15.dp))
+                FocusButton("+") {
+                    // Increase focus
+                }
             }
         }
     }
+}
 
+@Composable
+private fun FocusRow(Content: @Composable () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) { Content() }
+}
+
+@Composable
+private fun FocusButton(text: String, onClick: () -> Unit) {
+    Button(modifier = Modifier.size(52.dp), onClick = onClick) {
+        Text(text, fontSize = 24.sp)
+    }
 }
 
 @Composable
@@ -149,38 +171,33 @@ private fun RollIconsRow(Content: @Composable () -> Unit) {
         horizontalArrangement = Arrangement.Center,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 5.dp)
+            .padding(vertical = 10.dp)
     ) {
         Content()
     }
 }
 
 @Composable
-private fun RollIcons(rolls: MutableState<Int>) {
+private fun RollIcons(rolls: MutableState<Int>, focus: Int) {
+    repeat(6) {
+        RollIcon(it, rolls, focus)
+    }
+}
+
+@Composable
+private fun RollIcon(index: Int, rolls: MutableState<Int>, focus: Int) {
+    val id = if (focus > index) {
+        R.drawable.focus
+    } else if (index < rolls.value) {
+        R.drawable.luck
+    } else {
+        R.drawable.luck_disabled
+    }
+
     Image(
-        painterResource(id = R.drawable.luck),
+        painterResource(id),
         null,
-        Modifier.clickable { rolls.value = 1 })
-    Image(
-        painterResource(id = if (rolls.value > 1) R.drawable.luck else R.drawable.luck_disabled),
-        null,
-        Modifier.clickable { rolls.value = 2 })
-    Image(
-        painterResource(id = if (rolls.value > 2) R.drawable.luck else R.drawable.luck_disabled),
-        null,
-        Modifier.clickable { rolls.value = 3 })
-    Image(
-        painterResource(id = if (rolls.value > 3) R.drawable.luck else R.drawable.luck_disabled),
-        null,
-        Modifier.clickable { rolls.value = 4 })
-    Image(
-        painterResource(id = if (rolls.value > 4) R.drawable.luck else R.drawable.luck_disabled),
-        null,
-        Modifier.clickable { rolls.value = 5 })
-    Image(
-        painterResource(id = if (rolls.value > 5) R.drawable.luck else R.drawable.luck_disabled),
-        null,
-        Modifier.clickable { rolls.value = 6 })
+        Modifier.clickable { rolls.value = index + 1 })
 }
 
 @Preview(
