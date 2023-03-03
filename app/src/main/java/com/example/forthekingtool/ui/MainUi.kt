@@ -27,6 +27,71 @@ import com.example.forthekingtool.ui.theme.ForTheKingToolTheme
 
 @Composable
 fun MainUi() {
+    MainUiContainer {
+        val rolls = remember { mutableStateOf(3) }
+        val focus = remember { mutableStateOf(0) }
+        val rollChanceString = remember { mutableStateOf("75") }
+        val damageString = remember { mutableStateOf("10") }
+        val criticalChanceString = remember { mutableStateOf("5") }
+
+        val damage = if (damageString.value.isEmpty()) 0 else damageString.value.toInt()
+
+        val rollChance =
+            if (rollChanceString.value.isEmpty()) 0.0 else rollChanceString.value.toDouble() / 100
+
+        val criticalChance =
+            if (criticalChanceString.value.isEmpty()) 0.0 else criticalChanceString.value.toDouble() / 100
+
+        val criticalBoostFromFocus = focus.value * ForTheKingLogic.criticalBoostPerFocus
+
+        val criticalChanceWithFocus = criticalChance.plus(criticalBoostFromFocus).coerceAtMost(1.0)
+
+        val exactChances =
+            ForTheKingLogic.calculateExactChances(rollChance, rolls.value, focus.value)
+
+        val atLeastChances =
+            BinomialDistributionCalculator.calculateAtLeastChances(exactChances)
+
+        InputRow {
+            DamageInput(damageString)
+        }
+
+        ChanceOutputRow {
+            ChanceOutput(exactChances, atLeastChances, damage, criticalChanceWithFocus)
+        }
+
+        InputRow {
+            ChanceInput(rollChanceString)
+            if (focus.value > 0) {
+                ChanceBoost(ForTheKingLogic.focusToChanceBoost[focus.value] ?: 0.0)
+            }
+        }
+
+        InputRow {
+            CriticalInput(criticalChanceString)
+            if (focus.value > 0) {
+                ChanceBoost(criticalBoostFromFocus)
+            }
+        }
+
+        RollIconsRow {
+            RollIcons(rolls, focus)
+        }
+
+        FocusRow {
+            FocusButton("-") {
+                focus.value = focus.value.minus(1).coerceAtLeast(0)
+            }
+            Text("Focus", modifier = Modifier.padding(horizontal = 15.dp))
+            FocusButton("+") {
+                focus.value = focus.value.plus(1).coerceAtMost(rolls.value)
+            }
+        }
+    }
+}
+
+@Composable
+private fun MainUiContainer(Content: @Composable () -> Unit) {
     Box {
         TopAppBar(title = { Text("For The Stats!") })
 
@@ -35,56 +100,14 @@ fun MainUi() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            val rolls = remember { mutableStateOf(3) }
-            val focus = remember { mutableStateOf(0) }
-            val rollChanceString = remember { mutableStateOf("75") }
-            val damageString = remember { mutableStateOf("10") }
-
-            val damage = if (damageString.value.isEmpty()) 0 else damageString.value.toInt()
-            val rollChance =
-                if (rollChanceString.value.isEmpty()) 0.0 else rollChanceString.value.toDouble() / 100
-            val exactChances =
-                ForTheKingLogic.calculateExactChances(rollChance, rolls.value, focus.value)
-            val atLeastChances =
-                BinomialDistributionCalculator.calculateAtLeastChances(exactChances)
-
-            InputRow {
-                DamageInput(damageString)
-            }
-
-            ChanceOutputRow {
-                ChanceOutput(exactChances, atLeastChances, damage)
-            }
-
-            InputRow {
-                ChanceInput(rollChanceString)
-                if (focus.value > 0) {
-                    ChanceBoost(focus.value)
-                }
-
-            }
-
-            RollIconsRow {
-                RollIcons(rolls, focus)
-            }
-
-            FocusRow {
-                FocusButton("-") {
-                    focus.value = focus.value.minus(1).coerceAtLeast(0)
-                }
-                Text("Focus", modifier = Modifier.padding(horizontal = 15.dp))
-                FocusButton("+") {
-                    focus.value = focus.value.plus(1).coerceAtMost(rolls.value)
-                }
-            }
+            Content()
         }
     }
 }
 
 @Composable
-private fun ChanceBoost(focus: Int) {
-    val chanceBoost = ForTheKingLogic.focusToChanceBoost[focus] ?: 0.0
-    val chanceBoostFormatted = (chanceBoost * 100).toInt().toString()
+private fun ChanceBoost(chance: Double) {
+    val chanceBoostFormatted = (chance * 100).toInt().toString()
     Text(" + $chanceBoostFormatted%")
 }
 
@@ -102,17 +125,23 @@ private fun FocusButton(text: String, onClick: () -> Unit) {
 
 @Composable
 private fun ChanceOutputRow(Content: @Composable () -> Unit) {
-    Row(modifier = Modifier.padding(bottom = 5.dp, top = 5.dp)) { Content() }
+    Row(modifier = Modifier.padding(vertical = 5.dp)) { Content() }
 }
 
 @Composable
-private fun ChanceOutput(exactChances: List<Double>, atLeastChances: List<Double>, damage: Int) {
+private fun ChanceOutput(
+    exactChances: List<Double>,
+    atLeastChances: List<Double>,
+    damage: Int,
+    criticalChance: Double
+) {
     Column {
         Text("Fail all rolls: ")
         for (i in 1 until atLeastChances.size - 1) {
             Text("At least $i: ")
         }
         Text("Perfect: ")
+        Text("Critical: ")
     }
     Column(horizontalAlignment = Alignment.End) {
         Text(exactChances[0].toChance())
@@ -120,11 +149,13 @@ private fun ChanceOutput(exactChances: List<Double>, atLeastChances: List<Double
             Text(atLeastChances[i].toChance())
         }
         Text(exactChances.last().toChance())
+        Text((exactChances.last() * criticalChance).toChance())
     }
     Column(horizontalAlignment = Alignment.End) {
         for (i in atLeastChances.indices) {
             Text(" to do ${(i * damage) / (atLeastChances.size - 1)}")
         }
+        Text(" to do ${(damage * ForTheKingLogic.criticalDamageModifier).toInt()}")
     }
 }
 
@@ -134,7 +165,15 @@ private fun Double.toChance(): String {
 
 @Composable
 private fun InputRow(Content: @Composable () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) { Content() }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 5.dp)
+    ) { Content() }
+}
+
+@Composable
+private fun CriticalInput(criticalChance: MutableState<String>) {
+    QuickNumberInput(label = "Critical Chance", number = criticalChance)
 }
 
 @Composable
