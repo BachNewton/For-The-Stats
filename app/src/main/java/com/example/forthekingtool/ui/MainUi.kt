@@ -1,5 +1,6 @@
 package com.example.forthekingtool.ui
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardActions
@@ -14,6 +15,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
@@ -23,16 +25,32 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.forthekingtool.forthekinglogic.ForTheKingLogic
 import com.example.forthekingtool.probability.BinomialDistributionCalculator
+import com.example.forthekingtool.ui.data.TabData
 import com.example.forthekingtool.ui.theme.ForTheKingToolTheme
 
 @Composable
 fun MainUi() {
-    MainUiContainer {
-        val rolls = remember { mutableStateOf(3) }
-        val focus = remember { mutableStateOf(0) }
-        val rollChanceString = remember { mutableStateOf("75") }
-        val damageString = remember { mutableStateOf("10") }
-        val criticalChanceString = remember { mutableStateOf("5") }
+    val tabSelected = remember { mutableStateOf(0) }
+
+    MainUiContainer(tabSelected) {
+        val tabsData = remember {
+            List(4) {
+                TabData(
+                    rolls = mutableStateOf(3),
+                    focus = mutableStateOf(0),
+                    rollChanceString = mutableStateOf("75"),
+                    damageString = mutableStateOf("10"),
+                    criticalChanceString = mutableStateOf("5")
+                )
+            }
+        }
+
+        val tabData = tabsData[tabSelected.value]
+        val rolls = tabData.rolls
+        val focus = tabData.focus
+        val rollChanceString = tabData.rollChanceString
+        val damageString = tabData.damageString
+        val criticalChanceString = tabData.criticalChanceString
 
         val damage = if (damageString.value.isEmpty()) 0 else damageString.value.toInt()
 
@@ -91,9 +109,9 @@ fun MainUi() {
 }
 
 @Composable
-private fun MainUiContainer(Content: @Composable () -> Unit) {
+private fun MainUiContainer(tabSelected: MutableState<Int>, Content: @Composable () -> Unit) {
     Box {
-        TopAppBar(title = { Text("For The Stats!") })
+        TopAppBar(title = { Text("For The Stats!") }, actions = { TopAppBarTabs(tabSelected) })
 
         Column(
             Modifier.fillMaxSize(),
@@ -103,6 +121,30 @@ private fun MainUiContainer(Content: @Composable () -> Unit) {
             Content()
         }
     }
+}
+
+@Composable
+private fun TopAppBarTabs(tabSelected: MutableState<Int>) {
+    Tab(R.drawable.blacksmith, tabSelected.value == 0) { tabSelected.value = 0 }
+    Tab(R.drawable.hunter, tabSelected.value == 1) { tabSelected.value = 1 }
+    Tab(R.drawable.minstrel, tabSelected.value == 2) { tabSelected.value = 2 }
+    Tab(R.drawable.scholar, tabSelected.value == 3) { tabSelected.value = 3 }
+}
+
+@Composable
+private fun Tab(@DrawableRes id: Int, isSelected: Boolean, onClick: () -> Unit) {
+    val defaultModifier = Modifier
+        .clickable { onClick() }
+        .size(65.dp)
+        .padding(horizontal = 5.dp)
+
+    val selectedModifier = defaultModifier.background(Color.White)
+
+    Image(
+        painterResource(id),
+        null,
+        if (isSelected) selectedModifier else defaultModifier
+    )
 }
 
 @Composable
