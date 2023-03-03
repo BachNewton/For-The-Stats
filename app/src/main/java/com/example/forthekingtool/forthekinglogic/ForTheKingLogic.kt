@@ -13,7 +13,8 @@ object ForTheKingLogic {
     private const val criticalDamageModifier = 1.25
 
     fun calculateExactChances(rollChance: Double, totalRolls: Int, focus: Int): List<Double> {
-        val rollChanceWithFocus = rollChance + (focusToChanceBoost[focus] ?: 0.0)
+        val rollChanceWithFocus =
+            rollChance.plus(focusToChanceBoost[focus] ?: 0.0).coerceAtMost(1.0)
         val totalRollsWithoutFocus = totalRolls - focus
         val exactChancesAfterFocus = BinomialDistributionCalculator.calculateExactChances(
             rollChanceWithFocus,
