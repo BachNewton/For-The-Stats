@@ -70,12 +70,24 @@ fun MainUi() {
         val atLeastChances =
             BinomialDistributionCalculator.calculateAtLeastChances(exactChances)
 
-        InputRow {
-            DamageInput(damageString)
-        }
-
         ChanceOutputRow {
             ChanceOutput(exactChances, atLeastChances, damage, criticalChanceWithFocus)
+        }
+
+        Text(
+            "Expected Damage: ${
+                String.format(
+                    "%.1f", ForTheKingLogic.calculateAverageExpectedDamage(
+                        damage,
+                        exactChances,
+                        criticalChanceWithFocus
+                    )
+                )
+            }"
+        )
+
+        InputRow {
+            DamageInput(damageString)
         }
 
         InputRow {
@@ -191,13 +203,16 @@ private fun ChanceOutput(
             Text(atLeastChances[i].toChance())
         }
         Text(exactChances.last().toChance())
-        Text((exactChances.last() * criticalChance).toChance())
+        Text(
+            ForTheKingLogic.calculateChanceToCritical(exactChances.last(), criticalChance)
+                .toChance()
+        )
     }
     Column(horizontalAlignment = Alignment.End) {
         for (i in atLeastChances.indices) {
             Text(" to do ${(i * damage) / (atLeastChances.size - 1)}")
         }
-        Text(" to do ${(damage * ForTheKingLogic.criticalDamageModifier).toInt()}")
+        Text(" to do ${(ForTheKingLogic.calculateCriticalDamage(damage)).toInt()}")
     }
 }
 

@@ -10,13 +10,50 @@ object ForTheKingLogic {
 
     // From: https://fortheking.fandom.com/wiki/Critical_hit
     const val criticalBoostPerFocus = 0.05
-    const val criticalDamageModifier = 1.25
+    private const val criticalDamageModifier = 1.25
 
     fun calculateExactChances(rollChance: Double, totalRolls: Int, focus: Int): List<Double> {
         val rollChanceWithFocus = rollChance + (focusToChanceBoost[focus] ?: 0.0)
         val totalRollsWithoutFocus = totalRolls - focus
-        val exactChancesAfterFocus = BinomialDistributionCalculator.calculateExactChances(rollChanceWithFocus, totalRollsWithoutFocus)
+        val exactChancesAfterFocus = BinomialDistributionCalculator.calculateExactChances(
+            rollChanceWithFocus,
+            totalRollsWithoutFocus
+        )
         val exactChancesBeforeFocus = List(focus) { 0.0 }
         return exactChancesBeforeFocus + exactChancesAfterFocus
+    }
+
+    fun calculateChanceToCritical(perfectChance: Double, criticalChance: Double): Double {
+        return perfectChance * criticalChance
+    }
+
+    fun calculateCriticalDamage(damage: Int): Double {
+        return damage * criticalDamageModifier
+    }
+
+    fun calculateAverageExpectedDamage(
+        totalPossibleDamage: Int,
+        exactChances: List<Double>,
+        criticalChance: Double
+    ): Double {
+        val averageExpectedDamages = mutableListOf<Double>()
+
+        exactChances.forEachIndexed { index, exactChance ->
+            val damage = (totalPossibleDamage * index) / (exactChances.size - 1.0)
+            val expectedDamage = damage * exactChance
+            averageExpectedDamages.add(expectedDamage)
+        }
+
+        val chanceToCritical = calculateChanceToCritical(exactChances.last(), criticalChance)
+        val chanceToPerfect = exactChances.last()
+        val chanceToOnlyPerfect = chanceToPerfect - chanceToCritical
+
+        val expectedPerfectDamage = totalPossibleDamage * chanceToOnlyPerfect
+        val expectedCriticalDamage = calculateCriticalDamage(totalPossibleDamage) * chanceToCritical
+
+        averageExpectedDamages[averageExpectedDamages.lastIndex] = expectedPerfectDamage
+        averageExpectedDamages.add(expectedCriticalDamage)
+
+        return averageExpectedDamages.sum()
     }
 }
