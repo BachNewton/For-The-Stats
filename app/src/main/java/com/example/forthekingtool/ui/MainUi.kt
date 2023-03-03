@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.forthekingtool.forthekinglogic.ForTheKingLogic
 import com.example.forthekingtool.probability.BinomialDistributionCalculator
 import com.example.forthekingtool.ui.theme.ForTheKingToolTheme
 
@@ -43,7 +44,7 @@ fun MainUi() {
             val rollChance =
                 if (rollChanceString.value.isEmpty()) 0.0 else rollChanceString.value.toDouble() / 100
             val exactChances =
-                BinomialDistributionCalculator.calculateExactChances(rollChance, rolls.value)
+                ForTheKingLogic.calculateExactChances(rollChance, rolls.value, focus.value)
             val atLeastChances =
                 BinomialDistributionCalculator.calculateAtLeastChances(exactChances)
 
@@ -57,23 +58,34 @@ fun MainUi() {
 
             InputRow {
                 ChanceInput(rollChanceString)
+                if (focus.value > 0) {
+                    ChanceBoost(focus.value)
+                }
+
             }
 
             RollIconsRow {
-                RollIcons(rolls, focus.value)
+                RollIcons(rolls, focus)
             }
 
             FocusRow {
                 FocusButton("-") {
-                    // Reduce focus
+                    focus.value = focus.value.minus(1).coerceAtLeast(0)
                 }
                 Text("Focus", modifier = Modifier.padding(horizontal = 15.dp))
                 FocusButton("+") {
-                    // Increase focus
+                    focus.value = focus.value.plus(1).coerceAtMost(rolls.value)
                 }
             }
         }
     }
+}
+
+@Composable
+private fun ChanceBoost(focus: Int) {
+    val chanceBoost = ForTheKingLogic.focusToChanceBoost[focus] ?: 0.0
+    val chanceBoostFormatted = (chanceBoost * 100).toInt().toString()
+    Text(" + $chanceBoostFormatted%")
 }
 
 @Composable
@@ -178,15 +190,15 @@ private fun RollIconsRow(Content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun RollIcons(rolls: MutableState<Int>, focus: Int) {
+private fun RollIcons(rolls: MutableState<Int>, focus: MutableState<Int>) {
     repeat(6) {
         RollIcon(it, rolls, focus)
     }
 }
 
 @Composable
-private fun RollIcon(index: Int, rolls: MutableState<Int>, focus: Int) {
-    val id = if (focus > index) {
+private fun RollIcon(index: Int, rolls: MutableState<Int>, focus: MutableState<Int>) {
+    val id = if (focus.value > index) {
         R.drawable.focus
     } else if (index < rolls.value) {
         R.drawable.luck
@@ -197,7 +209,10 @@ private fun RollIcon(index: Int, rolls: MutableState<Int>, focus: Int) {
     Image(
         painterResource(id),
         null,
-        Modifier.clickable { rolls.value = index + 1 })
+        Modifier.clickable {
+            rolls.value = index + 1
+            focus.value = focus.value.coerceAtMost(rolls.value)
+        })
 }
 
 @Preview(

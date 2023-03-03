@@ -20,11 +20,24 @@ object BinomialDistributionCalculator {
         val chances = mutableListOf<Double>()
 
         for (successes in 0..totalRolls) {
-            val exactly = totalRolls.choose(successes) * rollChance.pow(successes) * (1 - rollChance).pow(totalRolls - successes)
+            val exactly = probabilityMassFunction(totalRolls, successes, rollChance)
             chances.add(exactly)
         }
 
         return chances
+    }
+
+    @Suppress("UnnecessaryVariable")
+    private fun probabilityMassFunction(
+        independentBernoulliTrials: Int,
+        successes: Int,
+        probability: Double
+    ): Double {
+        val n = independentBernoulliTrials
+        val k = successes
+        val p = probability
+
+        return n.choose(k) * p.pow(k) * (1 - p).pow(n - k)
     }
 
     fun Int.choose(k: Int): Int {
