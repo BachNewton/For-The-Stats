@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.forthekingtool.forthekinglogic.ForTheKingLogic
 import com.example.forthekingtool.probability.BinomialDistributionCalculator
+import com.example.forthekingtool.ui.data.SubTabData
 import com.example.forthekingtool.ui.data.TabData
 import com.example.forthekingtool.ui.theme.ForTheKingToolTheme
 
@@ -34,25 +35,32 @@ import com.example.forthekingtool.ui.theme.ForTheKingToolTheme
 fun MainUi() {
     val tabSelected = remember { mutableStateOf(0) }
 
-    MainUiContainer(tabSelected) {
-        val tabsData = remember {
-            List(3) {
-                TabData(
-                    rolls = mutableStateOf(6),
-                    focus = mutableStateOf(2),
-                    rollChanceString = mutableStateOf("75"),
-                    damageString = mutableStateOf("10"),
-                    criticalChanceString = mutableStateOf("5")
-                )
-            }
+    val tabsData = remember {
+        List(3) {
+            TabData(
+                subTabSelected = mutableStateOf(0),
+                subTabsData = List(5) {
+                    SubTabData(
+                        rolls = mutableStateOf(3),
+                        focus = mutableStateOf(0),
+                        rollChanceString = mutableStateOf("76"),
+                        damageString = mutableStateOf("12"),
+                        criticalChanceString = mutableStateOf("5")
+                    )
+                }
+            )
         }
+    }
 
+    MainUiContainer(tabSelected, tabsData[tabSelected.value].subTabSelected) {
         val tabData = tabsData[tabSelected.value]
-        val rolls = tabData.rolls
-        val focus = tabData.focus
-        val rollChanceString = tabData.rollChanceString
-        val damageString = tabData.damageString
-        val criticalChanceString = tabData.criticalChanceString
+        val subTabData = tabData.subTabsData[tabData.subTabSelected.value]
+
+        val rolls = subTabData.rolls
+        val focus = subTabData.focus
+        val rollChanceString = subTabData.rollChanceString
+        val damageString = subTabData.damageString
+        val criticalChanceString = subTabData.criticalChanceString
 
         val damage = if (damageString.value.isEmpty()) 0 else damageString.value.toInt()
 
@@ -121,7 +129,11 @@ fun MainUi() {
 }
 
 @Composable
-private fun MainUiContainer(tabSelected: MutableState<Int>, Content: @Composable () -> Unit) {
+private fun MainUiContainer(
+    tabSelected: MutableState<Int>,
+    subTabSelected: MutableState<Int>,
+    Content: @Composable () -> Unit
+) {
     Box {
         Column(Modifier.background(MaterialTheme.colors.primary)) {
             TopAppBar(
@@ -130,7 +142,7 @@ private fun MainUiContainer(tabSelected: MutableState<Int>, Content: @Composable
                 backgroundColor = MaterialTheme.colors.primary
             )
             SubTabsRow {
-                SubTabs()
+                SubTabs(subTabSelected)
             }
         }
 
@@ -157,12 +169,12 @@ private fun SubTabsRow(Content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun SubTabs() {
-    SubTab(R.drawable.sword, false) { /* TODO */ }
-    SubTab(R.drawable.bow, true) { /* TODO */ }
-    SubTab(R.drawable.book, false) { /* TODO */ }
-    SubTab(R.drawable.instrument, false) {/* TODO */ }
-    SubTab(R.drawable.gun, false) { /* TODO */ }
+private fun SubTabs(subTabSelected: MutableState<Int>) {
+    SubTab(R.drawable.sword, subTabSelected.value == 0) { subTabSelected.value = 0 }
+    SubTab(R.drawable.bow, subTabSelected.value == 1) { subTabSelected.value = 1 }
+    SubTab(R.drawable.book, subTabSelected.value == 2) { subTabSelected.value = 2 }
+    SubTab(R.drawable.instrument, subTabSelected.value == 3) { subTabSelected.value = 3 }
+    SubTab(R.drawable.gun, subTabSelected.value == 4) { subTabSelected.value = 4 }
 }
 
 @Composable
