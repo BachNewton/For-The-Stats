@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
@@ -35,10 +36,10 @@ fun MainUi() {
 
     MainUiContainer(tabSelected) {
         val tabsData = remember {
-            List(4) {
+            List(3) {
                 TabData(
-                    rolls = mutableStateOf(3),
-                    focus = mutableStateOf(0),
+                    rolls = mutableStateOf(6),
+                    focus = mutableStateOf(2),
                     rollChanceString = mutableStateOf("75"),
                     damageString = mutableStateOf("10"),
                     criticalChanceString = mutableStateOf("5")
@@ -89,9 +90,7 @@ fun MainUi() {
 
         InputRow {
             DamageInput(damageString)
-        }
-
-        InputRow {
+            Spacer(Modifier.width(15.dp))
             ChanceInput(rollChanceString)
             if (focus.value > 0) {
                 ChanceBoost(ForTheKingLogic.focusToChanceBoost[focus.value] ?: 0.0)
@@ -124,12 +123,21 @@ fun MainUi() {
 @Composable
 private fun MainUiContainer(tabSelected: MutableState<Int>, Content: @Composable () -> Unit) {
     Box {
-        TopAppBar(title = { Text("For The Stats!") }, actions = { TopAppBarTabs(tabSelected) })
+        Column(Modifier.background(MaterialTheme.colors.primary)) {
+            TopAppBar(
+                title = { Text("For The Stats!") },
+                actions = { TopAppBarTabs(tabSelected) },
+                backgroundColor = MaterialTheme.colors.primary
+            )
+            SubTabsRow {
+                SubTabs()
+            }
+        }
 
         Column(
             Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Bottom
         ) {
             Content()
         }
@@ -137,11 +145,48 @@ private fun MainUiContainer(tabSelected: MutableState<Int>, Content: @Composable
 }
 
 @Composable
+private fun SubTabsRow(Content: @Composable () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 15.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Content()
+    }
+}
+
+@Composable
+private fun SubTabs() {
+    SubTab(R.drawable.sword, false) { /* TODO */ }
+    SubTab(R.drawable.bow, true) { /* TODO */ }
+    SubTab(R.drawable.book, false) { /* TODO */ }
+    SubTab(R.drawable.instrument, false) {/* TODO */ }
+    SubTab(R.drawable.gun, false) { /* TODO */ }
+}
+
+@Composable
+private fun SubTab(@DrawableRes id: Int, isSelected: Boolean, onClick: () -> Unit) {
+    val defaultModifier = Modifier
+        .clickable { onClick() }
+        .size(46.dp)
+
+    val selectedModifier = defaultModifier.background(Color.White)
+    val tintColor = if (isSelected) MaterialTheme.colors.primary else MaterialTheme.colors.onPrimary
+
+    Image(
+        painterResource(id),
+        null,
+        colorFilter = ColorFilter.tint(tintColor),
+        modifier = if (isSelected) selectedModifier else defaultModifier
+    )
+}
+
+@Composable
 private fun TopAppBarTabs(tabSelected: MutableState<Int>) {
     Tab(R.drawable.blacksmith, tabSelected.value == 0) { tabSelected.value = 0 }
     Tab(R.drawable.hunter, tabSelected.value == 1) { tabSelected.value = 1 }
-    Tab(R.drawable.minstrel, tabSelected.value == 2) { tabSelected.value = 2 }
-    Tab(R.drawable.scholar, tabSelected.value == 3) { tabSelected.value = 3 }
+    Tab(R.drawable.scholar, tabSelected.value == 2) { tabSelected.value = 2 }
 }
 
 @Composable
@@ -168,7 +213,10 @@ private fun ChanceBoost(chance: Double) {
 
 @Composable
 private fun FocusRow(Content: @Composable () -> Unit) {
-    Row(verticalAlignment = Alignment.CenterVertically) { Content() }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(bottom = 15.dp)
+    ) { Content() }
 }
 
 @Composable
@@ -236,7 +284,7 @@ private fun CriticalInput(criticalChance: MutableState<String>) {
 
 @Composable
 private fun ChanceInput(rollChance: MutableState<String>) {
-    QuickNumberInput(label = "Roll Chance", number = rollChance)
+    QuickNumberInput(label = "Roll", number = rollChance)
 }
 
 @Composable
