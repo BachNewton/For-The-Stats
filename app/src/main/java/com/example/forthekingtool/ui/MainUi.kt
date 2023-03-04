@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -329,6 +330,18 @@ fun MainUiPreviewDark() {
 @Composable
 fun MainUiPreviewLight() {
     ForTheKingToolTheme(darkTheme = false) {
+        MainUi()
+    }
+}
+
+@Preview(
+    name = "MainUi - Pixel 3",
+    showSystemUi = true,
+    device = Devices.PIXEL_3
+)
+@Composable
+fun MainUiPreviewPixel3() {
+    ForTheKingToolTheme {
         MainUi()
     }
 }
