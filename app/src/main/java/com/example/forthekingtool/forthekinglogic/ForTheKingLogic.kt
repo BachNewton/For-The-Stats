@@ -1,6 +1,7 @@
 package com.example.forthekingtool.forthekinglogic
 
 import com.example.forthekingtool.probability.BinomialDistributionCalculator
+import kotlin.math.roundToInt
 
 object ForTheKingLogic {
 
@@ -9,8 +10,8 @@ object ForTheKingLogic {
         mapOf(0 to 0.0, 1 to 0.1, 2 to 0.15, 3 to 0.17, 4 to 0.19, 5 to 0.19, 6 to 0.19)
 
     // From: https://fortheking.fandom.com/wiki/Critical_hit
-    const val criticalBoostPerFocus = 0.05
-    private const val criticalDamageModifier = 1.25
+    const val CRITICAL_BOOST_PER_FOCUS = 0.05
+    private const val CRITICAL_DAMAGE_DAMAGE_MODIFIER = 1.25
 
     fun calculateExactChances(rollChance: Double, totalRolls: Int, focus: Int): List<Double> {
         val rollChanceWithFocus =
@@ -28,8 +29,17 @@ object ForTheKingLogic {
         return perfectChance * criticalChance
     }
 
-    fun calculateCriticalDamage(damage: Int): Double {
-        return damage * criticalDamageModifier
+    fun calculateCriticalDamage(damage: Int): Int {
+        // In For The King, damage is rounded to the nearest integer
+        return (damage * CRITICAL_DAMAGE_DAMAGE_MODIFIER).roundToInt()
+    }
+
+    fun calculateDamagePerRolls(totalPossibleDamage: Int, rolls: Int, totalRolls: Int): Int {
+        val percentOfTotalRolls = rolls / totalRolls.toDouble()
+        val damage = percentOfTotalRolls * totalPossibleDamage
+
+        // In For The King, damage is rounded to the nearest integer
+        return damage.roundToInt()
     }
 
     fun calculateAverageExpectedDamage(
@@ -40,7 +50,7 @@ object ForTheKingLogic {
         val averageExpectedDamages = mutableListOf<Double>()
 
         exactChances.forEachIndexed { index, exactChance ->
-            val damage = (totalPossibleDamage * index) / (exactChances.size - 1.0)
+            val damage = calculateDamagePerRolls(totalPossibleDamage, index, exactChances.size - 1)
             val expectedDamage = damage * exactChance
             averageExpectedDamages.add(expectedDamage)
         }

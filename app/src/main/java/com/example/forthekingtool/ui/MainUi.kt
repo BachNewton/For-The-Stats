@@ -70,7 +70,7 @@ fun MainUi() {
         val criticalChance =
             if (criticalChanceString.value.isEmpty()) 0.0 else criticalChanceString.value.toDouble() / 100
 
-        val criticalBoostFromFocus = focus.value * ForTheKingLogic.criticalBoostPerFocus
+        val criticalBoostFromFocus = focus.value * ForTheKingLogic.CRITICAL_BOOST_PER_FOCUS
 
         val criticalChanceWithFocus = criticalChance.plus(criticalBoostFromFocus).coerceAtMost(1.0)
 
@@ -271,9 +271,11 @@ private fun ChanceOutput(
     }
     Column(horizontalAlignment = Alignment.End) {
         for (i in atLeastChances.indices) {
-            Text(" to do ${(i * damage) / (atLeastChances.size - 1)}")
+            val damagePerRolls =
+                ForTheKingLogic.calculateDamagePerRolls(damage, i, atLeastChances.size - 1)
+            Text(" to do $damagePerRolls")
         }
-        Text(" to do ${(ForTheKingLogic.calculateCriticalDamage(damage)).toInt()}")
+        Text(" to do ${ForTheKingLogic.calculateCriticalDamage(damage)}")
     }
 }
 

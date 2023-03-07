@@ -1,6 +1,7 @@
 package com.example.forthekingtool.forthekinglogic
 
 import com.example.forthekingtool.forthekinglogic.ForTheKingLogic.calculateAverageExpectedDamage
+import com.example.forthekingtool.forthekinglogic.ForTheKingLogic.calculateDamagePerRolls
 import com.example.forthekingtool.forthekinglogic.ForTheKingLogic.calculateExactChances
 import org.junit.Test
 
@@ -34,5 +35,12 @@ internal class ForTheKingLogicTest {
             )
         val expected = 90.28531249999999
         assert(averageExpectedDamage == expected)
+    }
+
+    @Test
+    fun calculateDamagePerRollsTest() {
+        val damagePerRolls = calculateDamagePerRolls(9, 3, 4)
+        val expectedDamage = 7
+        assert(expectedDamage == damagePerRolls)
     }
 }
