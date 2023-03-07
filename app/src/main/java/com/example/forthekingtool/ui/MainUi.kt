@@ -170,11 +170,15 @@ private fun SubTabsRow(Content: @Composable () -> Unit) {
 
 @Composable
 private fun SubTabs(subTabSelected: MutableState<Int>) {
-    SubTab(R.drawable.sword, subTabSelected.value == 0) { subTabSelected.value = 0 }
-    SubTab(R.drawable.bow, subTabSelected.value == 1) { subTabSelected.value = 1 }
-    SubTab(R.drawable.book, subTabSelected.value == 2) { subTabSelected.value = 2 }
-    SubTab(R.drawable.instrument, subTabSelected.value == 3) { subTabSelected.value = 3 }
-    SubTab(R.drawable.gun, subTabSelected.value == 4) { subTabSelected.value = 4 }
+    listOf(
+        R.drawable.sword,
+        R.drawable.bow,
+        R.drawable.book,
+        R.drawable.instrument,
+        R.drawable.gun
+    ).forEachIndexed { index, drawableId ->
+        SubTab(drawableId, subTabSelected.value == index) { subTabSelected.value = index }
+    }
 }
 
 @Composable
@@ -196,9 +200,13 @@ private fun SubTab(@DrawableRes id: Int, isSelected: Boolean, onClick: () -> Uni
 
 @Composable
 private fun TopAppBarTabs(tabSelected: MutableState<Int>) {
-    Tab(R.drawable.blacksmith, tabSelected.value == 0) { tabSelected.value = 0 }
-    Tab(R.drawable.hunter, tabSelected.value == 1) { tabSelected.value = 1 }
-    Tab(R.drawable.scholar, tabSelected.value == 2) { tabSelected.value = 2 }
+    listOf(
+        R.drawable.blacksmith,
+        R.drawable.hunter,
+        R.drawable.scholar
+    ).forEachIndexed { index, drawableId ->
+        Tab(drawableId, tabSelected.value == index) { tabSelected.value = index }
+    }
 }
 
 @Composable
